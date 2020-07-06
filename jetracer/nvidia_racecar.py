@@ -25,21 +25,27 @@ class NvidiaRacecar(Racecar):
     
     @traitlets.observe('throttle')
     def _on_throttle(self, change):
-        if change['new'] > 0:
-            self.motor._pca.channels[0].duty_cycle = int(0xFFFF * (change['new'] * self.throttle_gain))
-            self.motor._pca.channels[1].duty_cycle = 0xFFFF
-            self.motor._pca.channels[2].duty_cycle = 0
-            self.motor._pca.channels[3].duty_cycle = 0
-            self.motor._pca.channels[4].duty_cycle = int(0xFFFF * (change['new'] * self.throttle_gain))
-            self.motor._pca.channels[7].duty_cycle = int(0xFFFF * (change['new'] * self.throttle_gain))
-            self.motor._pca.channels[6].duty_cycle = 0xFFFF
-            self.motor._pca.channels[5].duty_cycle = 0
+        global timer
+        #self.throttle_motor.throttle = change['new'] * self.throttle_gain
+        self.target = change['new'] * self.throttle_gain
+        if((self.target < 0.1) and (self.target > -0.1)):
+            self.status = self.target
+            self.throttle_motor.throttle = self.status
+        elif ((self.target < self.status) and (0 < self.status)):
+            self.status = self.target
+            self.throttle_motor.throttle = self.status
         else:
-            self.motor._pca.channels[0].duty_cycle = int(-0xFFFF * (change['new'] * self.throttle_gain))
-            self.motor._pca.channels[1].duty_cycle = 0
-            self.motor._pca.channels[2].duty_cycle = 0xFFFF
-            self.motor._pca.channels[3].duty_cycle = int(-0xFFFF * (change['new'] * self.throttle_gain))
-            self.motor._pca.channels[4].duty_cycle = 0
-            self.motor._pca.channels[7].duty_cycle = int(-0xFFFF * (change['new'] * self.throttle_gain))
-            self.motor._pca.channels[6].duty_cycle = 0
-            self.motor._pca.channels[5].duty_cycle = 0xFFFF
+            self._soft_start()
+        
+    def _soft_start(self):
+        global timer
+        if(self.status <= self.target):
+            self.status = self.status + 0.18
+            if(self.status >= self.target):self.status=self.target
+        else:
+            self.status = self.status - 0.18
+            if(self.status <= self.target):self.status=self.target
+        self.throttle_motor.throttle = self.status
+        if(self.status != self.target):
+            timer = threading.Timer(1.2, self._soft_start)
+            timer.start()
