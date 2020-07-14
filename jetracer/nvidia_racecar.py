@@ -19,6 +19,7 @@ class NvidiaRacecar(Racecar):
     def __init__(self, *args, **kwargs):
         super(NvidiaRacecar, self).__init__(*args, **kwargs)
         self.kit = ServoKit(channels=16, address=self.i2c_address)
+        self.kit._pca.frequency = 60
         self.steering_motor = self.kit.continuous_servo[self.steering_channel]
         self.throttle_motor = self.kit.continuous_servo[self.throttle_channel]
         self.steering_motor.throttle = 0
