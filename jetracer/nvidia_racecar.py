@@ -11,12 +11,18 @@ class NvidiaRacecar(Racecar):
     steering_channel = traitlets.Integer(default_value=0)
     throttle_gain = traitlets.Float(default_value=0.8)
     throttle_channel = traitlets.Integer(default_value=1)
+    status = 0
+    target = 0
+    timer = None
+
     
     def __init__(self, *args, **kwargs):
         super(NvidiaRacecar, self).__init__(*args, **kwargs)
         self.kit = ServoKit(channels=16, address=self.i2c_address)
         self.steering_motor = self.kit.continuous_servo[self.steering_channel]
         self.throttle_motor = self.kit.continuous_servo[self.throttle_channel]
+        self.steering_motor.throttle = 0
+        self.throttle_motor.throttle = 0
     
     @traitlets.observe('steering')
     def _on_steering(self, change):
