@@ -27,13 +27,12 @@ class NvidiaRacecar(Racecar):
     
     @traitlets.observe('steering')
     def _on_steering(self, change):
-        self.steering_motor.throttle = change['new'] * self.steering_gain + self.steering_offset
+        self.steering_motor.throttle = change['steering'] * self.steering_gain + self.steering_offset
     
     @traitlets.observe('throttle')
     def _on_throttle(self, change):
         global timer
-        #self.throttle_motor.throttle = change['new'] * self.throttle_gain
-        self.target = change['new'] * self.throttle_gain
+        self.target = change['throttle'] * self.throttle_gain
         if((self.target < 0.1) and (self.target > -0.1)):
             self.status = self.target
             self.throttle_motor.throttle = self.status
